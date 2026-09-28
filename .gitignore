@@ -1,1 +1,33 @@
+# Environment & Secrets (CRITICAL: NEVER COMMIT API KEYS)
 .env
+.env.*
+!.env.example
+
+# Vector Database (Local ChromaDB store)
+vector_db/
+
+# Media & Audio Downloads
+downloads/
+*.wav
+*.mp3
+*.mp4
+*.m4a
+*.webm
+
+# Python Bytecode & Cache
+__pycache__/
+core/__pycache__/
+utils/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Mac OS metadata
+.DS_Store
+
+# Streamlit logs
+*.log

@@ -1,49 +1,44 @@
-# ─────────────────────────────────────────────
-# AI Meeting Assistant — Requirements
+# ── AI Meeting Assistant ── requirements.txt ──────────────────────────────────
 # Python >= 3.10 recommended
-# ─────────────────────────────────────────────
 
-# ── UI ────────────────────────────────────────
-streamlit>=1.38.0
+# ── Audio / Video acquisition ─────────────────────────────────────────────────
+yt-dlp>=2024.4.9                  # Download audio from YouTube URLs
+pydub>=0.25.1                     # Audio file manipulation / format conversion
+ffmpeg-python>=0.2.0              # FFmpeg bindings (FFmpeg binary must be installed separately)
 
-# ── Audio / Video Acquisition ─────────────────
-yt-dlp>=2024.8.6                  # Download audio from YouTube URLs
-pydub>=0.25.1                     # Audio slicing & format conversion
-audioop-lts>=0.2.1                # pydub fix: audioop backport for Python 3.13+
-ffmpeg-python>=0.2.0              # FFmpeg Python bindings (ffmpeg must be on PATH)
+# ── Speech-to-Text (local Whisper) ────────────────────────────────────────────
+openai-whisper>=20231117          # OpenAI Whisper (runs locally)
+torch>=2.2.0                      # PyTorch backend for Whisper
+torchaudio>=2.2.0                 # Audio utilities for PyTorch
 
-# ── Speech-to-Text (local Whisper) ────────────
-openai-whisper>=20231117          # Local Whisper inference
-torch>=2.2.0                      # PyTorch backend
-torchaudio>=2.2.0                 # Audio I/O for PyTorch
+# ── Translation (Hindi → English) ─────────────────────────────────────────────
+deep-translator>=1.11.4           # Lightweight translation wrapper (Google backend)
 
-# ── Translation (Hindi → English) ─────────────
-deep-translator>=1.11.4           # Free translation via Google backend
-langdetect>=1.0.9                 # Auto-detect source language
+# ── LLM Orchestration — LangChain LCEL + Mistral ──────────────────────────────
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-community>=0.2.0
+langchain-mistralai>=0.1.0        # LangChain wrapper for Mistral API
+mistralai>=0.4.0                  # Official Mistral Python client
 
-# ── LangChain LCEL + Mistral Free API ─────────
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-community>=0.3.0
-langchain-mistralai>=0.2.0        # LangChain ↔ Mistral integration
-mistralai>=1.0.0                  # Official Mistral Python SDK
+# ── RAG Pipeline ──────────────────────────────────────────────────────────────
+chromadb>=0.5.0                   # Local vector store
+sentence-transformers>=3.0.0      # HuggingFace embedding models
+langchain-huggingface>=0.0.3      # LangChain ↔ HuggingFace embeddings bridge
+huggingface-hub>=0.23.0           # Model downloading from HuggingFace Hub
+tiktoken>=0.7.0                   # Token counting for text splitting
 
-# ── RAG — Vector Store & Embeddings ───────────
-chromadb>=0.5.5                   # Local persistent vector store
-langchain-chroma>=0.1.4           # LangChain ↔ ChromaDB connector
-sentence-transformers>=3.0.1      # HuggingFace embedding models (e.g. all-MiniLM-L6-v2)
-langchain-huggingface>=0.0.3      # LangChain ↔ HuggingFace embeddings connector
-huggingface-hub>=0.24.0           # Model downloads from HuggingFace Hub
+# ── Streamlit UI ──────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+streamlit-extras>=0.4.0           # Additional Streamlit widgets / utilities
+watchdog>=4.0.0                   # File-change watcher (improves Streamlit hot-reload)
 
-# ── Text Splitting ────────────────────────────
-tiktoken>=0.7.0                   # Token counting for LangChain text splitters
+# ── PDF & TXT Export ──────────────────────────────────────────────────────────
+reportlab>=4.2.0                  # PDF generation
+fpdf2>=2.7.9                      # Lightweight alternative PDF library
 
-# ── Export — PDF & TXT ────────────────────────
-fpdf2>=2.7.9                      # Pure-Python PDF generation
-reportlab>=4.2.2                  # Richer PDF generation (tables, styles)
-
-# ── Utilities ─────────────────────────────────
-python-dotenv>=1.0.1              # Load API keys from .env file
-requests>=2.32.0                  # HTTP client
-tqdm>=4.66.5                      # Progress bars
-numpy>=1.26.4                     # Numerical ops (Whisper / embeddings dependency)
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0              # Load API keys from .env
+numpy>=1.26.0
+tqdm>=4.66.0                      # Progress bars
+requests>=2.32.0

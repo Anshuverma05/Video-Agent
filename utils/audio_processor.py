@@ -1,11 +1,11 @@
 import yt_dlp
-import os
 from pydub import AudioSegment
+import os
 
-DOWNLOAD_DIR = "downloads"
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+DOWNLOAD_DIR = 'downloads'
+os.makedirs(DOWNLOAD_DIR,exist_ok = True)
 
-def download_youtube_audio(url : str) -> str:
+def download_youtube_audio(url :str) ->str:
     output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
     ydl_opts = {
         "format": "bestaudio/best",
@@ -18,13 +18,14 @@ def download_youtube_audio(url : str) -> str:
             }
         ],
         "quiet": True,
+        "no_warnings": True,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
     return filename
 
-data = download_youtube_audio("https://www.youtube.com/watch?v=2hkuK1H0g8M")
+
 
 def convert_to_wav(input_path: str) -> str:
     """Convert any audio/video file to WAV format using pydub."""
@@ -33,6 +34,7 @@ def convert_to_wav(input_path: str) -> str:
     audio = audio.set_channels(1).set_frame_rate(16000) #16khz
     audio.export(output_path, format="wav")
     return output_path
+
 
 
 def chunk_audio(wav_path : str , chunk_minutes : int = 10) -> list:
@@ -49,7 +51,6 @@ def chunk_audio(wav_path : str , chunk_minutes : int = 10) -> list:
         chunks.append(chunk_path)
     
     return chunks
-
 
 def process_input(source: str) -> list:
     if source.startswith("http://") or source.startswith("https://"):

@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
 import streamlit as st
 import time
 from dotenv import load_dotenv
@@ -336,7 +339,30 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown('<span class="badge badge-purple">Input</span>', unsafe_allow_html=True)
-    source = st.text_input("YouTube URL or File Path", placeholder="https://youtube.com/watch?v=... or /path/to/file.mp4")
+    input_mode = st.radio(
+        "Input Mode",
+        ["YouTube URL", "Upload File"],
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+
+    source = ""
+    if input_mode == "YouTube URL":
+        source = st.text_input("YouTube URL or File Path", placeholder="https://youtube.com/watch?v=... or /path/to/file.mp4")
+    else:
+        uploaded_file = st.file_uploader(
+            "Upload Audio / Video",
+            type=["mp3", "wav", "m4a", "mp4", "webm", "ogg", "flac"],
+            help="Upload an audio or video file directly from your computer",
+        )
+        if uploaded_file is not None:
+            upload_dir = "downloads"
+            _os.makedirs(upload_dir, exist_ok=True)
+            saved_path = _os.path.join(upload_dir, uploaded_file.name)
+            with open(saved_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            source = saved_path
+            st.caption(f"📁 Selected: `{uploaded_file.name}`")
 
     language = st.selectbox("Language", ["english", "hinglish"], index=0)
 
@@ -368,10 +394,10 @@ def _validate_source(src: str):
     """Returns (is_valid, error_message)"""
     src = src.strip()
     if not src:
-        return False, "Please enter a YouTube URL or a local file path."
+        return False, "Please enter a YouTube URL or upload an audio/video file."
     # Check for JSON / API responses accidentally pasted
     if src.startswith("{") or src.startswith("["):
-        return False, "That looks like JSON, not a URL. Please paste a YouTube URL (e.g. https://youtube.com/watch?v=...) or a local file path."
+        return False, "That looks like JSON, not a URL. Please paste a YouTube URL (e.g. https://youtube.com/watch?v=...) or upload a file."
     # Valid YouTube / web URL
     if src.startswith("http://") or src.startswith("https://"):
         if not _re.search(r'youtu\.?be', src) and "youtube" not in src:
@@ -379,7 +405,7 @@ def _validate_source(src: str):
         return True, ""
     # Local file
     if not _os.path.exists(src):
-        return False, f"File not found: `{src}`. Please check the path or paste a YouTube URL instead."
+        return False, f"File not found: `{src}`. Please check the path or use the 'Upload File' option."
     return True, ""
 
 if run_btn:

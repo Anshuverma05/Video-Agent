@@ -1,15 +1,21 @@
+import os
+import re
+import warnings
+
+# Suppress SyntaxWarning emitted by older regex patterns in libraries on Python 3.12+
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
 import yt_dlp
 from pydub import AudioSegment
-import os
 
 DOWNLOAD_DIR = 'downloads'
-os.makedirs(DOWNLOAD_DIR,exist_ok = True)
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-def download_youtube_audio(url: str) -> str:
-    output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
+def _download_with_yt_dlp(url: str, player_clients: list) -> str:
+    """Download YouTube audio using specified player client(s) with FFmpeg audio extraction."""
     ydl_opts = {
         "format": "bestaudio/best",
-        "outtmpl": output_path,
+        "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -17,23 +23,74 @@ def download_youtube_audio(url: str) -> str:
                 "preferredquality": "192",
             }
         ],
+        "extractor_args": {
+            "youtube": {
+                "player_client": player_clients
+            }
+        },
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+        },
         "quiet": True,
         "no_warnings": True,
+        "noplaylist": True,
     }
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
-        return filename
-    except Exception as e:
-        err = str(e)
-        if "403" in err or "Forbidden" in err:
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        video_id = info.get("id")
+
+        # The extracted audio file is always <id>.wav
+        expected_wav = os.path.join(DOWNLOAD_DIR, f"{video_id}.wav")
+        if os.path.exists(expected_wav):
+            return expected_wav
+
+        # Fallback to checking prepared filename base
+        prep = ydl.prepare_filename(info)
+        base, _ = os.path.splitext(prep)
+        wav_cand = base + ".wav"
+        if os.path.exists(wav_cand):
+            return wav_cand
+        if os.path.exists(prep):
+            return prep
+
+        raise FileNotFoundError(f"Extracted audio file not found for video id '{video_id}'")
+
+def download_youtube_audio(url: str) -> str:
+    # Try different client strategies to bypass YouTube 403 Forbidden on datacenters/cloud
+    client_strategies = [
+        ["android", "web"],
+        ["android"],
+        ["mweb", "web"],
+        ["ios", "web"],
+    ]
+
+    last_error = None
+    for clients in client_strategies:
+        try:
+            return _download_with_yt_dlp(url, clients)
+        except Exception as e:
+            last_error = e
+            err_str = str(e).lower()
+            if "unavailable" in err_str or "not a valid url" in err_str or "private" in err_str:
+                raise
+            continue
+
+    if last_error:
+        err = str(last_error)
+        if "403" in err or "forbidden" in err.lower():
             raise RuntimeError(
-                "YouTube blocked the download (HTTP 403 Forbidden). "
-                "This happens when the app is running on a cloud server — YouTube restricts downloads from datacenters. "
-                "Try a different video, or run the app locally on your own machine."
+                "YouTube blocked direct cloud download (HTTP 403 Forbidden). "
+                "Cloud server IP addresses (like Streamlit Cloud) are frequently restricted by YouTube. "
+                "💡 Please use the 'Upload Audio/Video' option in the sidebar to upload the file directly, or run the app locally."
             )
-        raise
+        raise last_error
+
+    raise RuntimeError("Failed to download audio from YouTube.")
 
 
 

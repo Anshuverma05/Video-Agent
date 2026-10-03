@@ -23,6 +23,8 @@ mistralai>=0.4.0                  # Official Mistral Python client
 
 # ── RAG Pipeline ──────────────────────────────────────────────────────────────
 chromadb>=0.5.0                   # Local vector store
+langchain-chroma>=0.1.0           # LangChain ↔ Chroma vector store integration
+langchain-text-splitters>=0.2.0   # Text chunking utilities for RAG
 sentence-transformers>=3.0.0      # HuggingFace embedding models
 langchain-huggingface>=0.0.3      # LangChain ↔ HuggingFace embeddings bridge
 huggingface-hub>=0.23.0           # Model downloading from HuggingFace Hub
@@ -42,4 +44,5 @@ python-dotenv>=1.0.0              # Load API keys from .env
 numpy>=1.26.0
 tqdm>=4.66.0                      # Progress bars
 requests>=2.32.0
+httpx>=0.27.0                     # HTTP client used in retry_utils for Mistral error handling
 audioop-lts; python_version>='3.13'  # audioop removed in Python 3.13+, required by pydub

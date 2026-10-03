@@ -5,7 +5,7 @@ import os
 DOWNLOAD_DIR = 'downloads'
 os.makedirs(DOWNLOAD_DIR,exist_ok = True)
 
-def download_youtube_audio(url :str) ->str:
+def download_youtube_audio(url: str) -> str:
     output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
     ydl_opts = {
         "format": "bestaudio/best",
@@ -20,10 +20,20 @@ def download_youtube_audio(url :str) ->str:
         "quiet": True,
         "no_warnings": True,
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
-    return filename
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+        return filename
+    except Exception as e:
+        err = str(e)
+        if "403" in err or "Forbidden" in err:
+            raise RuntimeError(
+                "YouTube blocked the download (HTTP 403 Forbidden). "
+                "This happens when the app is running on a cloud server — YouTube restricts downloads from datacenters. "
+                "Try a different video, or run the app locally on your own machine."
+            )
+        raise
 
 
 

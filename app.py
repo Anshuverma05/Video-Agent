@@ -361,9 +361,31 @@ st.markdown('<div class="hero-sub">Transcribe · Summarise · Chat with your mee
 st.markdown("---")
 
 # ── Run Pipeline ────────────────────────────────────────────────────────────────
+import os as _os
+import re as _re
+
+def _validate_source(src: str):
+    """Returns (is_valid, error_message)"""
+    src = src.strip()
+    if not src:
+        return False, "Please enter a YouTube URL or a local file path."
+    # Check for JSON / API responses accidentally pasted
+    if src.startswith("{") or src.startswith("["):
+        return False, "That looks like JSON, not a URL. Please paste a YouTube URL (e.g. https://youtube.com/watch?v=...) or a local file path."
+    # Valid YouTube / web URL
+    if src.startswith("http://") or src.startswith("https://"):
+        if not _re.search(r'youtu\.?be', src) and "youtube" not in src:
+            return False, "Only YouTube URLs are supported. Please paste a YouTube URL (e.g. https://youtube.com/watch?v=...)."
+        return True, ""
+    # Local file
+    if not _os.path.exists(src):
+        return False, f"File not found: `{src}`. Please check the path or paste a YouTube URL instead."
+    return True, ""
+
 if run_btn:
-    if not source.strip():
-        st.error("Please enter a YouTube URL or file path.")
+    is_valid, err_msg = _validate_source(source)
+    if not is_valid:
+        st.error(f"⚠️ Invalid input — {err_msg}")
     else:
         st.session_state.pipeline_done = False
         st.session_state.result = None
@@ -382,6 +404,7 @@ if run_btn:
             update_step("audio", "active")
             chunks = process_input(source)
             update_step("audio", "done")
+
 
             update_step("transcript", "active")
             transcript = transcribe_all(chunks, language)
